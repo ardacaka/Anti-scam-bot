@@ -40,9 +40,9 @@ Setup Instructions
 Clone or download this repository.
 2. Create a .env file
 In the same folder as Bot.py, create a file named .env and put this inside:
-textDISCORD_TOKEN=your_discord_bot_token_here
+DISCORD_TOKEN=your_discord_bot_token_here
 Example:
-textDISCORD_TOKEN=MTIzNDU2Nzg5MDEyMzQ1Njc4OQ.GaBcDe.FgHiJkLmNoPqRsTuVwXyZ1234567890
+DISCORD_TOKEN=MTIzNDU2Nzg5MDEyMzQ1Njc4OQ.GaBcDe.FgHiJkLmNoPqRsTuVwXyZ1234567890
 Never upload the .env file to GitHub. It is already ignored by .gitignore.
 3. Edit the code
 Open Bot.py and replace these two placeholders:
@@ -65,7 +65,9 @@ View Channels
 
 Administrator permission is recommended.
 5. Run the bot
-Bashpython Bot.py
+Bash
+
+python Bot.py
 
 Configuration File
 The bot automatically creates config.json the first time /setup is used.
