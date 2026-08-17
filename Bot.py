@@ -15,8 +15,7 @@ intents.members = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 CONFIG_FILE = "config.json"
-YOUR_ID = 1009741195813068883
-INVITE_LINK = "https://discord.com/oauth2/authorize?client_id=1524798172294021190&permissions=8&integration_type=0&scope=bot+applications.commands"
+YOUR_ID = 0  # ← Replace 0 with your Discord User ID
 
 def load_config():
     if os.path.exists(CONFIG_FILE):
@@ -60,7 +59,6 @@ async def delete_user_messages(guild, member, trap_channels, days):
 async def on_ready():
     print(f"✅ Bot is online as {bot.user}")
 
-    # Set status to "ping me for invite"
     await bot.change_presence(
         activity=discord.Activity(
             type=discord.ActivityType.playing,
@@ -83,16 +81,12 @@ async def on_message(message):
     if message.author.bot or not message.guild:
         return
 
-    # Reply with invite when the bot is pinged
+    # Reply when the bot is pinged
     if bot.user.mentioned_in(message) and not message.mention_everyone:
         embed = discord.Embed(
             title="Anti Scam Bot",
-            description="Thanks for the ping!\nClick the link below to invite me to your server.",
+            description="Thanks for the ping!",
             color=discord.Color.red()
-        )
-        embed.add_field(
-            name="Invite Link",
-            value=f"[Click here to invite]({INVITE_LINK})"
         )
         embed.add_field(
             name="Commands",
@@ -123,10 +117,24 @@ async def on_message(message):
         await message.delete()
 
         if punishment == "ban":
+            # DM the user BEFORE banning them
+            if config.get("send_invite_on_ban") and config.get("invite_link"):
+                try:
+                    await member.send(
+                        f"You are about to be banned from **{message.guild.name}**.\n\n"
+                        f"Here is a permanent invite link if you wish to rejoin later:\n"
+                        f"{config['invite_link']}"
+                    )
+                    print(f"📨 Sent invite DM to {member} before ban")
+                except Exception:
+                    print(f"❌ Could not DM {member} (DMs closed)")
+
+            # Now ban the user
             await member.ban(reason="Auto-ban: Message sent in restricted channel (scam prevention)")
             action_text = "Banned"
             duration_text = "Permanent"
             print(f"🔨 Banned {member} ({member.id}) in {message.guild.name}")
+
         else:
             timeout_until = discord.utils.utcnow() + timedelta(days=timeout_days)
             await member.timeout(timeout_until, reason="Auto-timeout: Message sent in restricted channel (scam prevention)")
@@ -163,24 +171,33 @@ async def on_message(message):
     trap_channel="The channel where people will get punished (leave empty to auto-create #bot-trap)",
     log_channel="The channel where logs will be sent (leave empty to auto-create #timeout-logs)",
     punishment="What should happen to the user?",
-    timeout_days="Number of days for timeout (only used if punishment is Timeout). Must be between 1 and 28"
+    timeout_days="Number of days for timeout (only used if punishment is Timeout). Must be between 1 and 28",
+    send_invite_on_ban="Should the bot DM a permanent invite to banned users?"
 )
-@app_commands.choices(punishment=[
-    app_commands.Choice(name="Timeout", value="timeout"),
-    app_commands.Choice(name="Ban", value="ban")
-])
+@app_commands.choices(
+    punishment=[
+        app_commands.Choice(name="Timeout", value="timeout"),
+        app_commands.Choice(name="Ban", value="ban")
+    ],
+    send_invite_on_ban=[
+        app_commands.Choice(name="Yes", value="yes"),
+        app_commands.Choice(name="No", value="no")
+    ]
+)
 @app_commands.checks.has_permissions(administrator=True)
 async def setup(
     interaction: discord.Interaction,
     trap_channel: discord.TextChannel = None,
     log_channel: discord.TextChannel = None,
     punishment: app_commands.Choice[str] = None,
-    timeout_days: app_commands.Range[int, 1, 28] = 7
+    timeout_days: app_commands.Range[int, 1, 28] = 7,
+    send_invite_on_ban: app_commands.Choice[str] = None
 ):
     guild = interaction.guild
     guild_id = guild.id
 
     punishment_value = punishment.value if punishment else "timeout"
+    send_invite = send_invite_on_ban.value == "yes" if send_invite_on_ban else False
 
     if trap_channel is None:
         trap_channel = await guild.create_text_channel(
@@ -211,21 +228,44 @@ async def setup(
             reason="Auto-created by Anti Scam bot as private log channel"
         )
 
+    # Create permanent invite if the option is enabled
+    invite_link = None
+    if send_invite:
+        try:
+            invite = await trap_channel.create_invite(
+                max_age=0,
+                max_uses=0,
+                unique=False,
+                reason="Permanent invite for banned users (Anti-Scam Bot)"
+            )
+            invite_link = invite.url
+            print(f"Created permanent invite: {invite_link}")
+        except Exception as e:
+            print(f"Failed to create invite: {e}")
+            invite_link = None
+
     SERVER_CONFIG[guild_id] = {
         "server_name": guild.name,
         "trap_channels": [trap_channel.id],
         "log_channel": log_channel.id,
         "timeout_days": timeout_days,
-        "punishment": punishment_value
+        "punishment": punishment_value,
+        "send_invite_on_ban": send_invite,
+        "invite_link": invite_link
     }
     save_config(SERVER_CONFIG)
+
+    invite_status = "Yes" if send_invite else "No"
+    invite_info = f"\n**Permanent Invite:** {invite_link}" if invite_link else ""
 
     await interaction.response.send_message(
         f"✅ Setup complete!\n"
         f"**Trap Channel:** {trap_channel.mention}\n"
         f"**Log Channel:** {log_channel.mention}\n"
         f"**Punishment:** {punishment_value.capitalize()}\n"
-        f"**Timeout Duration:** {timeout_days} day(s) (only used if Timeout is selected)",
+        f"**Timeout Duration:** {timeout_days} day(s) (only used if Timeout is selected)\n"
+        f"**Send Invite on Ban:** {invite_status}"
+        f"{invite_info}",
         ephemeral=True
     )
 
@@ -269,3 +309,5 @@ if not TOKEN:
     raise ValueError("❌ DISCORD_TOKEN not found in .env file")
 
 bot.run(TOKEN)
+
+# Credit: Original bot by ardacaka - https://github.com/ardacaka/Anti-scam-bot
