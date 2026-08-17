@@ -15,7 +15,11 @@ intents.members = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 CONFIG_FILE = "config.json"
-YOUR_ID = 0  # ← Replace 0 with your Discord User ID
+
+# ================== FILL THESE IN ==================
+YOUR_ID = 0  # ← Replace 0 with your Discord User ID (right-click your profile → Copy User ID)
+INVITE_LINK = "PASTE_YOUR_BOT_INVITE_LINK_HERE"  # ← Replace with your bot's invite link
+# ===================================================
 
 def load_config():
     if os.path.exists(CONFIG_FILE):
@@ -76,6 +80,8 @@ async def on_ready():
     except Exception as e:
         print(f"Failed to sync commands: {e}")
 
+    print(f"📊 Currently in {len(bot.guilds)} server(s)")
+
 @bot.event
 async def on_message(message):
     if message.author.bot or not message.guild:
@@ -85,8 +91,13 @@ async def on_message(message):
     if bot.user.mentioned_in(message) and not message.mention_everyone:
         embed = discord.Embed(
             title="Anti Scam Bot",
-            description="Thanks for the ping!",
+            description="Thanks for the ping!\nClick the link below to invite me to your server.",
             color=discord.Color.red()
+        )
+        embed.add_field(
+            name="Invite Link",
+            value=f"[Click here to invite]({INVITE_LINK})",
+            inline=False
         )
         embed.add_field(
             name="Commands",
@@ -129,7 +140,6 @@ async def on_message(message):
                 except Exception:
                     print(f"❌ Could not DM {member} (DMs closed)")
 
-            # Now ban the user
             await member.ban(reason="Auto-ban: Message sent in restricted channel (scam prevention)")
             action_text = "Banned"
             duration_text = "Permanent"
