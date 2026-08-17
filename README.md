@@ -164,21 +164,3 @@ All rights reserved. Unauthorized copying, modification, distribution, or use of
 
 **Original bot by [ardacaka](https://github.com/ardacaka/Anti-scam-bot)**
 ```
-
-The file has been created at:
-
-**`/home/workdir/artifacts/README.md`**
-
-You can download it from there. This is a good place to pause and ask clarifying questions if needed. I want to make sure I get this right for you. I can also create the Bot.py file if you need it. Just let me know. 
-
-Wait, looking at the instruction, I need to just provide the file. The tool already wrote it. In the response I should confirm. 
-
-Actually, after using the tool, I need to give a final response. 
-
-Final response: The README file is ready. 
-
-To make it downloadable in this interface, I can use the render component if available, but for files, the write_file puts it in artifacts. 
-
-The system has a Render File component. 
-
-I should use it.
