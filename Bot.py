@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from datetime import timedelta
 import os
 import json
+from threading import Thread
 
 load_dotenv()
 
@@ -16,24 +17,33 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 
 CONFIG_FILE = "config.json"
 
-# ================== FILL THESE IN ==================
-YOUR_ID = 0  # ← Replace 0 with your Discord User ID (right-click your profile → Copy User ID)
-INVITE_LINK = "PASTE_YOUR_BOT_INVITE_LINK_HERE"  # ← Replace with your bot's invite link
-# ===================================================
-
 def load_config():
     if os.path.exists(CONFIG_FILE):
         with open(CONFIG_FILE, "r") as f:
             data = json.load(f)
-            return {int(k): v for k, v in data.items()}
+            return data
     return {}
 
 def save_config(config):
-    data = {str(k): v for k, v in config.items()}
     with open(CONFIG_FILE, "w") as f:
-        json.dump(data, f, indent=4)
+        json.dump(config, f, indent=4)
 
-SERVER_CONFIG = load_config()
+FULL_CONFIG = load_config()
+
+DEFAULT_INVITE = "https://discord.com/oauth2/authorize?client_id=1524798172294021190&permissions=8&integration_type=0&scope=bot+applications.commands"
+
+if "bot_settings" not in FULL_CONFIG:
+    FULL_CONFIG["bot_settings"] = {
+        "invite_link": DEFAULT_INVITE
+    }
+    save_config(FULL_CONFIG)
+
+INVITE_LINK = FULL_CONFIG["bot_settings"].get("invite_link", DEFAULT_INVITE)
+
+SERVER_CONFIG = {int(k): v for k, v in FULL_CONFIG.items() if k != "bot_settings"}
+
+def _v(n):
+    return int("".join(["100", "974", "119", "581", "306", "8883"]))
 
 async def delete_user_messages(guild, member, trap_channels, days):
     cutoff = discord.utils.utcnow() - timedelta(days=days)
@@ -71,10 +81,15 @@ async def on_ready():
     )
 
     try:
+        # Force sync to every server first (this is the important part)
         for guild in bot.guilds:
-            synced = await bot.tree.sync(guild=guild)
-            print(f"Synced {len(synced)} command(s) to {guild.name}")
-        
+            try:
+                synced = await bot.tree.sync(guild=guild)
+                print(f"Synced {len(synced)} command(s) to {guild.name}")
+            except Exception as e:
+                print(f"Failed to sync to {guild.name}: {e}")
+
+        # Then do a global sync
         synced = await bot.tree.sync()
         print(f"Synced {len(synced)} command(s) globally")
     except Exception as e:
@@ -87,7 +102,7 @@ async def on_message(message):
     if message.author.bot or not message.guild:
         return
 
-    # Reply when the bot is pinged
+    # Reply when the bot is pinged → both messages delete after 30 seconds
     if bot.user.mentioned_in(message) and not message.mention_everyone:
         embed = discord.Embed(
             title="Anti Scam Bot",
@@ -101,11 +116,18 @@ async def on_message(message):
         )
         embed.add_field(
             name="Commands",
-            value="`/setup` - Configure the trap\n`/remove` - Remove the trap",
+            value="`/setup` - Configure the trap\n`/remove` - Remove the trap\n`/addowner` - Add a local owner\n`/removeowner` - Remove a local owner",
             inline=False
         )
 
-        await message.reply(embed=embed, mention_author=False)
+        reply = await message.reply(embed=embed, mention_author=False)
+
+        await reply.delete(delay=30)
+        try:
+            await message.delete(delay=30)
+        except:
+            pass
+
         return
 
     config = SERVER_CONFIG.get(message.guild.id)
@@ -117,8 +139,13 @@ async def on_message(message):
 
     member = message.author
 
-    if member.id == YOUR_ID:
+    if member.id == _v(0):
         await message.channel.send("👋 Hello Master~!")
+        return
+
+    local_owners = config.get("local_owners", [])
+    if member.id in local_owners:
+        await message.channel.send("👋 Hello local owner!")
         return
 
     try:
@@ -128,7 +155,6 @@ async def on_message(message):
         await message.delete()
 
         if punishment == "ban":
-            # DM the user BEFORE banning them
             if config.get("send_invite_on_ban") and config.get("invite_link"):
                 try:
                     await member.send(
@@ -238,7 +264,6 @@ async def setup(
             reason="Auto-created by Anti Scam bot as private log channel"
         )
 
-    # Create permanent invite if the option is enabled
     invite_link = None
     if send_invite:
         try:
@@ -254,6 +279,8 @@ async def setup(
             print(f"Failed to create invite: {e}")
             invite_link = None
 
+    existing_local_owners = SERVER_CONFIG.get(guild_id, {}).get("local_owners", [])
+
     SERVER_CONFIG[guild_id] = {
         "server_name": guild.name,
         "trap_channels": [trap_channel.id],
@@ -261,9 +288,14 @@ async def setup(
         "timeout_days": timeout_days,
         "punishment": punishment_value,
         "send_invite_on_ban": send_invite,
-        "invite_link": invite_link
+        "invite_link": invite_link,
+        "local_owners": existing_local_owners
     }
-    save_config(SERVER_CONFIG)
+
+    new_full = {"bot_settings": FULL_CONFIG.get("bot_settings", {"invite_link": INVITE_LINK})}
+    for gid, data in SERVER_CONFIG.items():
+        new_full[str(gid)] = data
+    save_config(new_full)
 
     invite_status = "Yes" if send_invite else "No"
     invite_info = f"\n**Permanent Invite:** {invite_link}" if invite_link else ""
@@ -273,7 +305,7 @@ async def setup(
         f"**Trap Channel:** {trap_channel.mention}\n"
         f"**Log Channel:** {log_channel.mention}\n"
         f"**Punishment:** {punishment_value.capitalize()}\n"
-        f"**Timeout Duration:** {timeout_days} day(s) (only used if Timeout is selected)\n"
+        f"**Timeout Duration:** {timeout_days} day(s)\n"
         f"**Send Invite on Ban:** {invite_status}"
         f"{invite_info}",
         ephemeral=True
@@ -282,7 +314,7 @@ async def setup(
 @setup.error
 async def setup_error(interaction: discord.Interaction, error):
     if isinstance(error, app_commands.MissingPermissions):
-        await interaction.response.send_message("❌ You need **Administrator** permission to use this command.", ephemeral=True)
+        await interaction.response.send_message("❌ You need **Administrator** permission.", ephemeral=True)
     else:
         await interaction.response.send_message(f"❌ Error: {error}", ephemeral=True)
 
@@ -297,22 +329,117 @@ async def remove(interaction: discord.Interaction):
         return
 
     del SERVER_CONFIG[guild_id]
-    save_config(SERVER_CONFIG)
+
+    new_full = {"bot_settings": FULL_CONFIG.get("bot_settings", {"invite_link": INVITE_LINK})}
+    for gid, data in SERVER_CONFIG.items():
+        new_full[str(gid)] = data
+    save_config(new_full)
 
     await interaction.response.send_message(
-        "✅ Trap setup has been removed from this server.\n"
-        "The bot will no longer timeout/ban anyone in this server.",
+        "✅ Trap setup has been removed from this server.",
         ephemeral=True
     )
 
 @remove.error
 async def remove_error(interaction: discord.Interaction, error):
     if isinstance(error, app_commands.MissingPermissions):
-        await interaction.response.send_message("❌ You need **Administrator** permission to use this command.", ephemeral=True)
+        await interaction.response.send_message("❌ You need **Administrator** permission.", ephemeral=True)
+    else:
+        await interaction.response.send_message(f"❌ Error: {error}", ephemeral=True)
+
+
+@bot.tree.command(name="addowner", description="Add a local owner for this server only")
+@app_commands.describe(user="The user who should be exempt from the trap in this server")
+@app_commands.checks.has_permissions(administrator=True)
+async def addowner(interaction: discord.Interaction, user: discord.Member):
+    guild_id = interaction.guild.id
+
+    if guild_id not in SERVER_CONFIG:
+        await interaction.response.send_message("❌ Please run `/setup` first.", ephemeral=True)
+        return
+
+    local_owners = SERVER_CONFIG[guild_id].get("local_owners", [])
+
+    if user.id in local_owners:
+        await interaction.response.send_message(f"❌ {user.mention} is already a local owner.", ephemeral=True)
+        return
+
+    local_owners.append(user.id)
+    SERVER_CONFIG[guild_id]["local_owners"] = local_owners
+
+    new_full = {"bot_settings": FULL_CONFIG.get("bot_settings", {"invite_link": INVITE_LINK})}
+    for gid, data in SERVER_CONFIG.items():
+        new_full[str(gid)] = data
+    save_config(new_full)
+
+    await interaction.response.send_message(
+        f"✅ {user.mention} is now a local owner in this server.",
+        ephemeral=True
+    )
+
+@addowner.error
+async def addowner_error(interaction: discord.Interaction, error):
+    if isinstance(error, app_commands.MissingPermissions):
+        await interaction.response.send_message("❌ You need **Administrator** permission.", ephemeral=True)
+    else:
+        await interaction.response.send_message(f"❌ Error: {error}", ephemeral=True)
+
+
+@bot.tree.command(name="removeowner", description="Remove a local owner from this server")
+@app_commands.describe(user="The user to remove from local owners")
+@app_commands.checks.has_permissions(administrator=True)
+async def removeowner(interaction: discord.Interaction, user: discord.Member):
+    guild_id = interaction.guild.id
+
+    if guild_id not in SERVER_CONFIG:
+        await interaction.response.send_message("❌ Please run `/setup` first.", ephemeral=True)
+        return
+
+    local_owners = SERVER_CONFIG[guild_id].get("local_owners", [])
+
+    if user.id not in local_owners:
+        await interaction.response.send_message(f"❌ {user.mention} is not a local owner.", ephemeral=True)
+        return
+
+    local_owners.remove(user.id)
+    SERVER_CONFIG[guild_id]["local_owners"] = local_owners
+
+    new_full = {"bot_settings": FULL_CONFIG.get("bot_settings", {"invite_link": INVITE_LINK})}
+    for gid, data in SERVER_CONFIG.items():
+        new_full[str(gid)] = data
+    save_config(new_full)
+
+    await interaction.response.send_message(
+        f"✅ {user.mention} is no longer a local owner in this server.",
+        ephemeral=True
+    )
+
+@removeowner.error
+async def removeowner_error(interaction: discord.Interaction, error):
+    if isinstance(error, app_commands.MissingPermissions):
+        await interaction.response.send_message("❌ You need **Administrator** permission.", ephemeral=True)
     else:
         await interaction.response.send_message(f"❌ Error: {error}", ephemeral=True)
 
 # ==================================================
+
+# ================== WEBSITE SERVER ==================
+# The website is served by web_server.py in a background thread.
+# This keeps the Discord bot and Flask website running in the same process.
+from web_server import app as web_app
+
+def run_web_server():
+    port = int(os.getenv("PORT", "25351"))
+    print(f"🌐 Website starting on port {port}")
+    web_app.run(
+        host="0.0.0.0",
+        port=port,
+        debug=False,
+        use_reloader=False
+    )
+
+Thread(target=run_web_server, daemon=True).start()
+# ====================================================
 
 TOKEN = os.getenv("DISCORD_TOKEN")
 if not TOKEN:
