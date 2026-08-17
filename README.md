@@ -9,12 +9,13 @@ A Discord bot that automatically timeouts or bans users who post messages in des
 - Automatically **timeouts** or **bans** users who message in a trap channel
 - Customizable timeout duration (1–28 days)
 - Choice between **Timeout** or **Ban** as the punishment
+- Option to **DM a permanent invite** to banned users **before** they are banned
 - Auto-creates `#bot-trap` and a private `#timeout-logs` channel if none are selected
 - Private log channel (only visible to Administrators, Moderators, and the bot)
 - Deletes the offending message instantly
 - Purges the user’s recent messages from other channels
 - Owner exemption (the bot owner is never punished)
-- Saves all settings per server in `config.json`
+- Saves all settings per server in `config.json` (including the permanent invite link)
 - Replies with available commands when pinged
 - Custom status: `Playing ping me for invite`
 - Easy setup with a single `/setup` command
