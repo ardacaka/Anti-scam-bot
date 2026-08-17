@@ -1,0 +1,118 @@
+# Anti-Scam Trap Bot — Privacy Policy
+
+**Last Updated:** August 17, 2026
+
+This Privacy Policy explains how **Anti-Scam Trap Bot** ("the Bot") processes information when it is added to or used in a Discord server.
+
+By using the Bot, you acknowledge the practices described in this Privacy Policy.
+
+## 1. Information We Process
+
+The Bot may process the following information when necessary to provide its moderation features:
+
+* Discord server IDs and server names.
+* Discord user IDs.
+* Discord usernames and user mentions displayed in moderation logs.
+* Discord channel IDs and channel information.
+* Messages sent in channels configured as trap channels.
+* Moderation information, such as whether a user was timed out or banned.
+* Bot configuration and server-specific settings.
+
+## 2. Message Content
+
+The Bot monitors messages sent in configured trap channels for the purpose of enforcing the server's anti-scam trap.
+
+When a user sends a message in a configured trap channel, the Bot may:
+
+* Read the message to identify the sender.
+* Delete the triggering message.
+* Apply the punishment configured by the server administrator.
+* Record moderation information in the configured log channel.
+
+The current Bot code does **not store the content of these messages in its persistent configuration file**. Message content may nevertheless be temporarily processed by Discord and the Bot while the moderation action is being performed.
+
+## 3. Information Stored by the Bot
+
+The Bot stores server configuration information required for its operation.
+
+Depending on the server's configuration, this may include:
+
+* Server ID and server name.
+* Trap channel ID.
+* Log channel ID.
+* Punishment settings.
+* Timeout duration.
+* Invite settings and generated invite links.
+* Discord user IDs added as local owners.
+
+This information is stored in the Bot's configuration data.
+
+## 4. Moderation Logs
+
+When a user triggers the anti-scam trap, the Bot may send a moderation log containing information such as:
+
+* The user's Discord mention and username.
+* The user's Discord ID.
+* The channel where the message was posted.
+* The moderation action taken.
+* The duration of the punishment.
+* The reason for the action.
+
+The current implementation does not place the message's actual content into the moderation log.
+
+## 5. Data Retention
+
+Configuration information remains stored while the server's Bot configuration exists.
+
+A server administrator can disable the trap configuration using `/remove`. This removes the server's configuration from the Bot's active configuration data.
+
+Moderation messages sent to a Discord log channel may remain available according to that Discord server's own settings and retention practices.
+
+## 6. Who Can Access the Information
+
+Information processed by the Bot may be accessible to:
+
+* The Bot and its hosting infrastructure, as necessary to operate the service.
+* Authorized server administrators and moderators who can access the configured log channel.
+* Discord, as part of providing the Discord platform and API.
+
+The Bot does not intentionally sell personal information.
+
+## 7. Third-Party Services
+
+The Bot operates through **Discord** and uses Discord's API.
+
+Your use of Discord is also subject to Discord's own privacy policies and terms. The Bot does not control how Discord processes information outside of the Bot's own functionality.
+
+## 8. Security
+
+Reasonable measures may be used to protect the Bot's configuration and operational data. However, no online service or storage system can be guaranteed to be completely secure.
+
+Users should avoid sending sensitive personal information through Discord or into channels monitored by the Bot.
+
+## 9. Children's Privacy
+
+The Bot is intended to operate within Discord servers and does not knowingly collect information from children independently of Discord.
+
+Users should comply with Discord's age requirements and applicable laws when using Discord and the Bot.
+
+## 10. Data Requests
+
+Because the Bot primarily processes Discord-related information required for server moderation, requests concerning information stored by the Bot should be directed to the Bot's developer.
+
+Server administrators may also control access to moderation logs and Bot configuration within their own server.
+
+## 11. Changes to This Privacy Policy
+
+This Privacy Policy may be updated when the Bot's functionality, data practices, or applicable requirements change.
+
+The updated version will include a new "Last Updated" date.
+
+## 12. Contact
+
+For privacy questions, concerns, or requests regarding Anti-Scam Trap Bot, please contact the Bot's developer through the project's official repository or available support channels.
+
+---
+
+**Anti-Scam Trap Bot**
+Open Source • MIT Licensed
