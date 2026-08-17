@@ -1,0 +1,117 @@
+# Anti-Scam Trap Bot — Terms of Service
+
+**Last Updated:** August 17, 2026
+
+By adding, using, or interacting with **Anti-Scam Trap Bot** ("the Bot"), you agree to these Terms of Service ("Terms"). If you do not agree with these Terms, do not use the Bot.
+
+## 1. Description
+
+Anti-Scam Trap Bot is a Discord bot designed to help server administrators detect and prevent scam activity by monitoring configured trap channels and automatically applying administrator-selected punishments.
+
+The Bot may delete messages, timeout users, ban users, and send moderation logs depending on the configuration selected by the server administrator.
+
+## 2. Server Administrator Responsibility
+
+Server administrators are responsible for configuring and using the Bot appropriately.
+
+By configuring the Bot, you acknowledge that:
+
+* You have sufficient permissions to configure moderation features.
+* You are responsible for selecting the appropriate trap channels and punishments.
+* You are responsible for ensuring the Bot complies with your server's rules.
+* You are responsible for informing your server members about applicable moderation policies.
+* You understand that automatic moderation actions may occasionally affect legitimate users.
+
+## 3. Automatic Moderation
+
+The Bot may automatically take action against users who send messages in configured trap channels.
+
+Depending on the server configuration, actions may include:
+
+* Deleting the triggering message.
+* Temporarily timing out the user.
+* Permanently banning the user.
+* Recording moderation information in the configured log channel.
+* Removing other messages from the affected user within the configured period.
+
+The Bot does not guarantee that every scam, malicious message, or abusive user will be detected.
+
+## 4. Availability
+
+The Bot is provided on an **"as is" and "as available"** basis.
+
+We do not guarantee that the Bot will:
+
+* Always be online or available.
+* Detect every scam or malicious message.
+* Always perform moderation actions successfully.
+* Be free from bugs or interruptions.
+* Remain compatible with Discord indefinitely.
+
+Discord API changes, outages, permission issues, hosting problems, or other circumstances may affect the Bot.
+
+## 5. Permissions
+
+The Bot requires appropriate Discord permissions to perform its functions.
+
+If the Bot does not have sufficient permissions, some features may not work correctly. Server administrators are responsible for granting only the permissions they consider appropriate.
+
+## 6. Abuse and Misuse
+
+You agree not to intentionally use the Bot to:
+
+* Harass, threaten, or target individuals.
+* Circumvent Discord's systems or restrictions.
+* Abuse automated moderation features.
+* Deliberately cause excessive moderation actions.
+* Use the Bot for unlawful purposes.
+* Interfere with the operation of the Bot or its infrastructure.
+
+## 7. Discord
+
+The Bot operates through Discord and is subject to Discord's policies and terms.
+
+Your use of Discord remains governed by Discord's own Terms of Service and policies. We are not responsible for Discord's services, availability, policies, or actions taken by Discord against your account or server.
+
+## 8. Data and Logs
+
+The Bot may process information necessary to perform its moderation functions, including Discord user IDs, server IDs, channel IDs, message information, and moderation-related information.
+
+Server administrators are responsible for configuring the Bot in accordance with applicable privacy requirements and their own server policies.
+
+## 9. No Warranty
+
+To the maximum extent permitted by applicable law, the Bot is provided without warranties of any kind, express or implied.
+
+We do not warrant that the Bot will be accurate, reliable, uninterrupted, secure, or suitable for every purpose.
+
+## 10. Limitation of Liability
+
+To the maximum extent permitted by applicable law, the developers and contributors of Anti-Scam Trap Bot shall not be liable for damages, losses, bans, timeouts, deleted messages, lost data, server disruptions, or other consequences resulting from the use or inability to use the Bot.
+
+## 11. Termination
+
+We may discontinue, restrict, or modify the Bot at any time without guaranteeing continued availability.
+
+Server administrators may remove the Bot from their server at any time.
+
+## 12. Open Source License
+
+Anti-Scam Trap Bot is released under the **MIT License**.
+
+The MIT License governs the use, copying, modification, distribution, and sublicensing of the source code. These Terms govern the use of the hosted Discord Bot service.
+
+Nothing in these Terms removes rights granted to you under the MIT License.
+
+## 13. Changes to These Terms
+
+These Terms may be updated from time to time. Continued use of the Bot after changes are published constitutes acceptance of the updated Terms.
+
+## 14. Contact
+
+For questions, bug reports, or other concerns regarding Anti-Scam Trap Bot, please contact the Bot's developer through the project's official repository or the available support/invite channels.
+
+---
+
+**Anti-Scam Trap Bot**
+Open Source • MIT Licensed
