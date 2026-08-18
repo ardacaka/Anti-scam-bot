@@ -5,7 +5,6 @@ from dotenv import load_dotenv
 from datetime import timedelta
 import os
 import json
-from threading import Thread
 
 load_dotenv()
 
@@ -202,7 +201,7 @@ async def on_message(message):
 
 # ================== SLASH COMMANDS ==================
 
-@bot.tree.command(name="setup", description="Set the trap channel, log channel, punishment, and timeout duration")
+@bot.tree.command(name="setup", description="Set up the trap, warning, logs, punishment, and timeout duration")
 @app_commands.describe(
     trap_channel="The channel where people will get punished (leave empty to auto-create #bot-trap)",
     log_channel="The channel where logs will be sent (leave empty to auto-create #timeout-logs)",
@@ -240,6 +239,37 @@ async def setup(
             name="bot-trap",
             reason="Auto-created by Anti Scam bot as trap channel"
         )
+
+    # Always post a warning in the configured trap channel, whether it was
+    # automatically created by the bot or selected manually with /setup.
+    warning_embed = discord.Embed(
+        title="⚠️ ANTI-SCAM TRAP — DO NOT MESSAGE",
+        description=(
+            "This channel is an **Anti-Scam Bot trap**.\n\n"
+            "🚫 **Do not send messages here.**\n"
+            "Any message sent in this channel may trigger an **automatic "
+            f"{punishment_value.capitalize()}**.\n\n"
+            "This channel is intentionally monitored by Anti-Scam Bot."
+        ),
+        color=discord.Color.red()
+    )
+    warning_embed.add_field(
+        name="Configured Punishment",
+        value=f"**{punishment_value.capitalize()}**"
+              + (f" for **{timeout_days} day(s)**" if punishment_value == "timeout" else ""),
+        inline=False
+    )
+    warning_embed.set_footer(text="Anti-Scam Bot • Trap Channel")
+
+    try:
+        await trap_channel.send(embed=warning_embed)
+    except discord.Forbidden:
+        print(
+            f"⚠️ Cannot send trap warning in #{trap_channel.name} in {guild.name}: "
+            "missing Send Messages or Embed Links permission."
+        )
+    except Exception as e:
+        print(f"⚠️ Failed to send trap warning in {guild.name}: {e}")
 
     if log_channel is None:
         overwrites = {
@@ -422,24 +452,6 @@ async def removeowner_error(interaction: discord.Interaction, error):
         await interaction.response.send_message(f"❌ Error: {error}", ephemeral=True)
 
 # ==================================================
-
-# ================== WEBSITE SERVER ==================
-# The website is served by web_server.py in a background thread.
-# This keeps the Discord bot and Flask website running in the same process.
-from web_server import app as web_app
-
-def run_web_server():
-    port = int(os.getenv("PORT", "25351"))
-    print(f"🌐 Website starting on port {port}")
-    web_app.run(
-        host="0.0.0.0",
-        port=port,
-        debug=False,
-        use_reloader=False
-    )
-
-Thread(target=run_web_server, daemon=True).start()
-# ====================================================
 
 TOKEN = os.getenv("DISCORD_TOKEN")
 if not TOKEN:
